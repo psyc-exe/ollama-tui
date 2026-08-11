@@ -1,0 +1,20 @@
+# dependencies
+node_modules/
+deps/
+
+# build output
+dist/
+release/
+*.tar.gz
+
+# runtime state
+data/
+
+# logs / os junk
+*.log
+.DS_Store
+Thumbs.db
+
+# secrets
+.env
+.env.*

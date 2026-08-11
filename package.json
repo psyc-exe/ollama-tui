@@ -1,0 +1,35 @@
+{
+  "name": "ollama-tui",
+  "version": "0.1.0",
+  "description": "Tokyo Dark front-end for Ollama: web UI + terminal UI, zero native build, amd64/arm64.",
+  "main": "server.js",
+  "bin": {
+    "ollama-tui": "dist/ollama-tui-tui.js",
+    "ollama-tui-web": "dist/ollama-tui-web.js"
+  },
+  "files": [
+    "dist/",
+    "installer/",
+    "install.sh",
+    "server.js",
+    "compressor.js",
+    "ollama-update.js",
+    "telegram.js",
+    "public/",
+    "tui-full.js",
+    "build-new.js",
+    "README.md"
+  ],
+  "scripts": {
+    "start": "node server.js",
+    "tui": "node tui-full.js",
+    "build": "node build-new.js",
+    "release": "tar czf release/ollama-tui-v0.1.0.tar.gz install.sh dist node_modules package.json README.md"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "blessed": "^0.1.81"
+  }
+}

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" data-perf="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1a1b26">
+<meta name="color-scheme" content="dark">
+<title>TokyoChat</title>
+<style>
+:root{
+  --bg:#1a1b26; --bg2:#1f2335; --bg3:#24283b; --bg4:#2a2f45; --codebg:#16161e;
+  --fg:#a9b1d6; --fg-dim:#565f89;
+  --blue:#7aa2f7; --cyan:#7dcfff; --green:#9ece6a; --purple:#bb9af7;
+  --red:#f7768e; --yellow:#e0af68; --orange:#ff9e64; --grey:#414868;
+  --radius:.85rem; --border:1px solid var(--grey); --shadow:none;
+  font-size:14px;
+}
+/* scale base font by viewport: 5" phone -> 32" tv */
+@media(min-width:520px){ :root{ font-size:14.5px } }
+@media(min-width:760px){ :root{ font-size:15px } }
+@media(min-width:1200px){ :root{ font-size:16.5px } }
+@media(min-width:1500px) and (min-height:850px){ :root{ font-size:21px } }
+@media(min-width:1900px) and (min-height:1000px){ :root{ font-size:24px } }
+[data-perf=high]{ --shadow:0 .5rem 2rem rgba(0,0,0,.55); }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:1rem/1.55 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  display:flex;flex-direction:column;overflow:hidden;-webkit-text-size-adjust:100%}
+::selection{background:var(--blue);color:#111}
+button{font:inherit;-webkit-tap-highlight-color:transparent}
+[data-perf=low] *{animation:none!important;transition:none!important;box-shadow:none!important}
+
+header{display:flex;align-items:center;gap:.6rem;padding:.7rem 1rem;background:var(--bg2);
+  border-bottom:var(--border);flex-wrap:wrap;user-select:none}
+.brand{font-weight:700;letter-spacing:.5px;font-size:1rem}
+.brand .t1{color:var(--blue)} .brand .t2{color:var(--cyan)}
+header .spacer{flex:1}
+.chip{font-size:.75rem;color:var(--fg-dim);background:var(--bg3);border:var(--border);
+  padding:.2rem .6rem;border-radius:2rem;white-space:nowrap}
+select,input[type=number]{background:var(--bg3);border:var(--border);color:var(--fg);
+  border-radius:.6rem;padding:.35rem .55rem;font-size:.85rem;outline:none;max-width:100%}
+select:focus,input:focus{border-color:var(--blue)}
+.btn{background:var(--bg3);border:var(--border);color:var(--fg);border-radius:.6rem;
+  padding:.35rem .65rem;font-size:.85rem;cursor:pointer;transition:border-color .15s,color .15s}
+.btn:hover{border-color:var(--blue);color:var(--blue)}
+.btn:disabled{opacity:.4;cursor:default}
+.params{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
+.pfield{display:flex;align-items:center;gap:.35rem;font-size:.8rem;color:var(--fg-dim)}
+.pfield abbr{text-decoration:underline dotted;cursor:help}
+.pfield input{width:4rem}
+.stepper{display:flex;align-items:center;gap:.1rem}
+.stepper button{width:1.5rem;height:1.5rem;background:var(--bg4);border:var(--border);
+  color:var(--cyan);border-radius:.45rem;cursor:pointer;font-size:.9rem;line-height:1;flex:none}
+.stepper button:hover{border-color:var(--cyan)}
+
+main{flex:1;display:flex;min-height:0}
+#chat{flex:1;overflow-y:auto;padding:1.2rem 1rem 2.6rem}
+.wrap{width:min(100%,58rem);margin:0 auto;display:flex;flex-direction:column;min-height:100%;
+  justify-content:flex-end;gap:1.1rem}
+.msg{display:flex;gap:.75rem;animation:fadein .18s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(.25rem)}to{opacity:1}}
+.msg .avatar{width:2rem;height:2rem;border-radius:.6rem;flex:none;display:flex;align-items:center;
+  justify-content:center;font-weight:800;font-size:.85rem;margin-top:.15rem}
+.msg.user .avatar{background:var(--blue);color:#111}
+.msg.assistant .avatar{background:var(--purple);color:#111}
+.msg .body{flex:1;min-width:0}
+.msg .role{font-size:.72rem;color:var(--fg-dim);margin-bottom:.25rem;letter-spacing:.4px;text-transform:uppercase}
+.msg.user .content{background:var(--bg3);border:var(--border);border-radius:var(--radius);
+  padding:.7rem .95rem;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere}
+.msg.assistant .content{white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere}
+.content.streaming::after{content:'▍';color:var(--green);animation:blink 1s steps(2,start) infinite}
+@keyframes blink{50%{opacity:0}}
+.reason{background:var(--bg2);border-left:.2rem solid var(--yellow);border-radius:.4rem;
+  padding:.5rem .7rem;margin-bottom:.5rem;font-size:.83rem;color:var(--fg-dim)}
+.reason summary{cursor:pointer;color:var(--yellow);user-select:none}
+.reason pre{white-space:pre-wrap;word-wrap:break-word;margin-top:.4rem;font-family:ui-monospace,Menlo,monospace}
+pre.code{background:var(--codebg);border:var(--border);border-radius:.65rem;overflow:auto;
+  margin:.6rem 0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88rem;line-height:1.5}
+pre.code .hdr{display:flex;justify-content:space-between;align-items:center;padding:.35rem .6rem;
+  background:var(--bg4);border-bottom:var(--border);font-size:.72rem;color:var(--fg-dim)}
+pre.code .lang{color:var(--cyan)}
+.copy{background:var(--bg3);border:var(--border);color:var(--fg);border-radius:.45rem;
+  padding:.15rem .55rem;font-size:.72rem;cursor:pointer}
+.copy:hover{border-color:var(--green);color:var(--green)}
+pre.code code{display:block;padding:.6rem .75rem;color:#c0caf5;white-space:pre;overflow:auto}
+:not(pre) > code{background:var(--bg3);border:var(--border);border-radius:.3rem;
+  padding:.05rem .3rem;font-family:ui-monospace,Menlo,monospace;font-size:.9em;color:var(--cyan);
+  white-space:pre-wrap;overflow-wrap:anywhere}
+.searchnote{font-size:.8rem;color:var(--orange);background:var(--bg3);border:var(--border);
+  border-radius:.55rem;padding:.5rem .7rem;margin-bottom:.6rem}
+.searchnote b{color:var(--yellow)}
+.meta{font-size:.72rem;color:var(--fg-dim);margin-top:.4rem;font-family:ui-monospace,Menlo,monospace}
+.meta .ok{color:var(--green)} .meta .tokens{color:var(--cyan)}
+#dock{background:var(--bg2);border-top:var(--border);padding:.65rem 1rem .9rem}
+#composer{width:min(100%,58rem);margin:0 auto;position:relative}
+textarea{width:100%;background:var(--bg3);border:var(--border);color:var(--fg);
+  border-radius:var(--radius);padding:.75rem 5.6rem .75rem .9rem;font:inherit;resize:none;
+  min-height:3.4rem;max-height:12.5rem;outline:none}
+textarea:focus{border-color:var(--blue)}
+#sendbtn{position:absolute;right:.5rem;bottom:.5rem;background:var(--blue);color:#111;border:none;
+  border-radius:.65rem;padding:.55rem .9rem;font-weight:700;cursor:pointer;font-size:.9rem}
+#sendbtn:disabled{background:var(--grey);color:var(--fg-dim);cursor:default}
+#sendbtn.busy{background:var(--red)}
+.dockrow{display:flex;align-items:center;gap:.6rem;margin-top:.5rem;flex-wrap:wrap;color:var(--fg-dim);font-size:.78rem}
+#tokstatus{font-family:ui-monospace,Menlo,monospace;color:var(--cyan)}
+#side{width:min(16rem,20vw);background:var(--bg2);border-right:var(--border);display:none;
+  flex-direction:column;overflow:hidden}
+#side.open{display:flex}
+#side h3{font-size:.75rem;color:var(--fg-dim);padding:.75rem .9rem .4rem;letter-spacing:.5px;text-transform:uppercase}
+#sessions{list-style:none;overflow-y:auto;flex:1;padding:.15rem .5rem}
+#sessions li{padding:.5rem .6rem;border-radius:.55rem;cursor:pointer;font-size:.85rem;color:var(--fg);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#sessions li:hover{background:var(--bg3)}
+#sessions li.active{background:var(--bg4);border-left:.2rem solid var(--blue)}
+#sessions li .n{color:var(--fg-dim);font-size:.72rem}
+.sidebtns{display:flex;gap:.4rem;padding:.5rem;border-top:var(--border);flex-wrap:wrap}
+menu{position:fixed;background:var(--bg3);border:var(--border);border-radius:.65rem;box-shadow:var(--shadow);
+  padding:.25rem;display:none;z-index:50;min-width:11rem}
+menu button{display:block;width:100%;text-align:left;background:none;border:none;color:var(--fg);
+  padding:.45rem .6rem;border-radius:.45rem;cursor:pointer;font-size:.85rem}
+menu button:hover{background:var(--bg4);color:var(--blue)}
+menu .sep{height:1px;background:var(--grey);margin:.25rem}
+menu button.danger{color:var(--red)} menu button.danger:hover{background:var(--red);color:#111}
+#toast{position:fixed;bottom:1.1rem;left:50%;transform:translateX(-50%) translateY(.4rem);background:var(--bg4);
+  border:var(--border);color:var(--fg);padding:.55rem 1rem;border-radius:.6rem;font-size:.85rem;
+  opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:60}
+#toast.show{opacity:1;transform:translateX(-50%)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:80}
+.tgcard{background:var(--bg2);border:var(--border);border-radius:.85rem;padding:1rem;width:min(92vw,27rem);
+  display:flex;flex-direction:column;gap:.6rem;box-shadow:var(--shadow);max-height:90vh;overflow:auto}
+.tgcard h3{font-size:1rem;display:flex;align-items:center;gap:.4rem}
+.tgst{font-size:.72rem;font-weight:600;padding:.15rem .5rem;border-radius:2rem;background:var(--bg4);color:var(--fg-dim)}
+.tgst.on{color:var(--green)} .tgst.off{color:var(--red)}
+.tgstatus{font-size:.8rem;color:var(--fg-dim);white-space:pre-wrap;background:var(--bg3);border:var(--border);
+  border-radius:.6rem;padding:.5rem .7rem}
+.tgcard label{display:flex;flex-direction:column;gap:.25rem;font-size:.78rem;color:var(--fg-dim)}
+.tgcard input{background:var(--bg3);border:var(--border);color:var(--fg);border-radius:.6rem;
+  padding:.4rem .55rem;font-size:.85rem;outline:none;width:100%}
+.tgcard input:focus{border-color:var(--blue)}
+.tgrow{display:flex;gap:.4rem;flex-wrap:wrap}
+.tgcard .danger{color:var(--red)} .tgcard .danger:hover{border-color:var(--red);color:var(--red)}
+.tgfoot{display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.72rem;color:var(--fg-dim)}
+.tgfoot code{background:var(--bg3);padding:.05rem .3rem;border-radius:.3rem}
+@media(max-width:700px){
+  #side{width:78vw;position:fixed;left:0;top:0;bottom:0;z-index:40;box-shadow:var(--shadow)}
+  .params .pfield:nth-child(2),.params .pfield:nth-child(3){display:none}
+  #chat{padding:.9rem .7rem 2rem}
+  .msg{gap:.55rem}
+}
+@media(min-width:701px){
+  .params{display:flex}
+}
+@media(pointer:coarse){
+  .btn,.chip,.copy,.stepper button,.sidebtns .btn{padding-top:.5rem;padding-bottom:.5rem}
+  #sessions li{padding:.7rem .6rem}
+  textarea{min-height:3.9rem}
+  .stepper button{width:1.9rem;height:1.9rem}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><span class="t1">◆</span> <span>Tokyo</span><span class="t2">Chat</span></div>
+  <span class="chip" id="ollamachip" title="Ollama">…</span>
+  <select id="model" title="Model (Ctrl+/)"></select>
+  <div class="spacer"></div>
+  <div class="params" id="params"></div>
+  <button class="btn" id="newbtn" title="New chat (Ctrl+L)">＋ New</button>
+  <button class="btn" id="tgbtn" title="Telegram bridge">📡</button>
+  <button class="btn" id="updbtn" title="Update Ollama">⬆️</button>
+  <button class="btn" id="sidebtn" title="Sessions">☰</button>
+</header>
+<main>
+  <aside id="side" aria-label="sessions">
+    <h3>Sessions</h3>
+    <ul id="sessions"></ul>
+    <div class="sidebtns">
+      <button class="btn" id="exjson">JSON</button>
+      <button class="btn" id="exmd">MD</button>
+      <button class="btn" id="excompact">Memory</button>
+    </div>
+  </aside>
+  <section id="chat" aria-live="polite"><div class="wrap" id="msgs"></div></section>
+</main>
+<div id="dock">
+  <div id="composer">
+    <textarea id="inp" placeholder="Message…  (Enter send · Shift+Enter newline · Ctrl+/ model · /search query)"></textarea>
+    <button id="sendbtn">Send</button>
+  </div>
+  <div class="dockrow"><span id="tokstatus"></span></div>
+</div>
+<menu id="ctx">
+  <button data-a="copy">Copy message</button>
+  <button data-a="reg">Regenerate</button>
+  <button class="sep"></button>
+  <button data-a="export-md">Export chat (MD)</button>
+  <button data-a="export-json">Export chat (JSON)</button>
+  <button data-a="export-compact">Export compact memory</button>
+  <button class="sep"></button>
+  <button data-a="summ" class="danger">Summary → memory</button>
+</menu>
+<div id="tgmodal" class="overlay" hidden>
+  <div class="tgcard">
+    <h3>📡 Telegram bridge <span class="tgst" id="tgst"></span></h3>
+    <div class="tgstatus" id="tgstatus">…</div>
+    <label>Bot token <input id="tg-token" type="password" placeholder="123456789:AA...-token" autocomplete="off"></label>
+    <label>Pairing UUID <input id="tg-uuid" readonly></label>
+    <div class="tgrow">
+      <button class="btn" id="tg-install">Install deps</button>
+      <button class="btn" id="tg-deploy">Deploy backend</button>
+      <button class="btn danger" id="tg-disable">Disable</button>
+    </div>
+    <div class="tgfoot"><small>Send the UUID to the bot from Telegram once to allow yourself. Deps install into <code>deps/</code>; no auto-install.</small>
+      <button class="btn" id="tg-close">Close</button></div>
+  </div>
+</div>
+<div id="updmodal" class="overlay" hidden>
+  <div class="tgcard">
+    <h3>⬆️ Ollama update</h3>
+    <div id="updstatus">…</div>
+    <div class="tgrow">
+      <button class="btn" id="upd-check">Check</button>
+      <button class="btn" id="upd-run">Update (dry-run)</button>
+    </div>
+    <div class="tgfoot"><small>Updates official Ollama binary for amd64/arm64. Real update requires OLLAMA_UPDATER_ALLOW_REAL=1.</small>
+      <button class="btn" id="upd-close">Close</button></div>
+  </div>
+</div>
+<div id="toast"></div>
+<script src="./app.js"></script>
+</body>
