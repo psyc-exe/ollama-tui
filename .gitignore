@@ -18,4 +18,3 @@ Thumbs.db
 # secrets
 .env
 .env.*
-opencode github install
