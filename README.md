@@ -35,6 +35,8 @@ Non-interactive flags:
 
 ## Run
 
+![TokyoChat Web UI](./public/ollama-tui-ui.png)
+
 ```bash
 # Web UI (phone / TV / desktop browser)
 PORT=8080 OLLAMA_HOST=http://127.0.0.1:11434 ollama-tui-web
