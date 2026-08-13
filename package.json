@@ -26,7 +26,6 @@
   "build": "node build-new.js",
   "release": "tar czf release/ollama-tui-v0.1.0.tar.gz install.sh dist node_modules package.json README.md",
   "test": "echo \"No tests specified\" && exit 0"
-  ,
   },
   "engines": {
     "node": ">=18"
