@@ -16,31 +16,33 @@ const screen = blessed.screen({
   warnings: false
 });
 
-const header = blessed.box({
-  parent: screen, top: 0, left: 0, right: 0, height: 1,
-  tags: true, style: { fg: 'black', bg: 'cyan', bold: true },
-  content: ' Ollama TUI  model=' + model + '  host=' + OLLAMA + '  mouse=off '
-});
-
-const status = blessed.box({
-  parent: screen, bottom: 0, left: 0, right: 0, height: 1,
-  tags: true, style: { fg: 'white', bg: 'blue' },
-  content: ' ESC quit  HOME top  END bot  PGUP/PGDN page  UP/DN line  TAB focus  CTRL+ALT+C clear  CTRL+ALT+M models  CTRL+ALT+T mouse '
+const logContainer = blessed.box({
+  parent: screen, top: 0, left: 0, right: 0, bottom: 3,
+  tags: true, border: { type: 'line' },
+  style: { border: { fg: 'magenta' } },
+  label: ' {bold}{cyan-fg}Ollama Chat{/} | {magenta-fg}Model:{/} ' + model + ' | {cyan-fg}Host:{/} ' + OLLAMA + ' | {magenta-fg}Mouse:{/} off '
 });
 
 const log = blessed.log({
-  parent: screen, top: 1, bottom: 2, left: 0, right: 0,
+  parent: logContainer, top: 0, bottom: 0, left: 0, right: 0,
   tags: true, mouse: false, keys: false,
   scrollable: true, alwaysScroll: true,
-  scrollbar: { ch: ' ', style: { bg: 'cyan' } },
-  style: { fg: 'white', bg: 'black' },
+  scrollbar: { ch: '█', track: { bg: '#2a2a2a' }, style: { bg: 'magenta', fg: 'magenta' } },
+  style: { fg: '#a9b1d6', bg: 'transparent' }, // Tokyo Dark text color
   bufferLength: 5000
 });
 
+const inputContainer = blessed.box({
+  parent: screen, bottom: 0, left: 0, right: 0, height: 3,
+  tags: true, border: { type: 'line' },
+  style: { border: { fg: 'cyan' } },
+  label: ' {cyan-fg}Input{/} (ESC: Quit | TAB: Focus | ↑/↓: Scroll Log | /help for cmds) '
+});
+
 const input = blessed.textbox({
-  parent: screen, bottom: 1, left: 0, right: 0, height: 1,
+  parent: inputContainer, top: 0, left: 0, right: 0, height: 1,
   inputOnFocus: true, keys: true, mouse: false,
-  style: { fg: 'white', bg: 'black', focus: { bg: 'gray' } }
+  style: { fg: '#c0caf5', bg: 'transparent', focus: { bg: '#2a2a2a' } }
 });
 
 let mouseOn = !!MOUSE_DEFAULT;
@@ -56,15 +58,15 @@ function mouseDisable() {
 }
 function applyMouse() {
   if (mouseOn) mouseEnable(); else mouseDisable();
-  header.setContent(' Ollama TUI  model=' + model + '  host=' + OLLAMA + '  mouse=' + (mouseOn ? 'on' : 'off') + ' ');
+  logContainer.setLabel(' {bold}{cyan-fg}Ollama Chat{/} | {magenta-fg}Model:{/} ' + model + ' | {cyan-fg}Host:{/} ' + OLLAMA + ' | {magenta-fg}Mouse:{/} ' + (mouseOn ? 'on' : 'off') + ' ');
   screen.render();
 }
 applyMouse();
 
 function logLine(role, text) {
-  if (role === 'user') log.add('{cyan-fg}you{/}: ' + text);
-  else if (role === 'assistant') log.add('{green-fg}assistant{/}: ' + text);
-  else if (role === 'sys') log.add('{yellow-fg}sys{/}: ' + text);
+  if (role === 'user') log.add('\n{bold}{magenta-fg}You{/}\n' + text + '\n');
+  else if (role === 'assistant') log.add('\n{bold}{cyan-fg}Assistant{/}\n' + text + '\n');
+  else if (role === 'sys') log.add('{bold}{yellow-fg}System{/}: ' + text);
   else log.add(text);
   screen.render();
 }
@@ -130,9 +132,14 @@ input.on('submit', async (text) => {
   screen.render();
   if (text === '/clear') { messages.length = 0; log.setContent(''); screen.render(); input.focus(); return; }
   if (text === '/exit' || text === '/quit') { return screen.destroy(); }
+  if (text === '/help') {
+    logLine('sys', 'Commands: /clear, /exit, /quit, /model <name>, /models\nShortcuts: CTRL+ALT+C (clear), CTRL+ALT+M (models), CTRL+ALT+T (mouse)\nNav: HOME/END (top/bottom), PGUP/PGDN (page)');
+    input.focus();
+    return;
+  }
   if (text.startsWith('/model ')) {
     model = text.slice(7).trim();
-    header.setContent(' {bold}Ollama TUI{/}  model=' + model + '  host=' + OLLAMA + ' ');
+    logContainer.setLabel(' {bold}{cyan-fg}Ollama Chat{/} | {magenta-fg}Model:{/} ' + model + ' | {cyan-fg}Host:{/} ' + OLLAMA + ' | {magenta-fg}Mouse:{/} ' + (mouseOn ? 'on' : 'off') + ' ');
     screen.render();
     input.focus();
     return;
@@ -194,5 +201,5 @@ process.on('SIGTERM', cleanExit);
 process.on('exit', () => { try { process.stdin.setRawMode(false); } catch (_) {} });
 
 input.focus();
-logLine('sys', 'Ollama TUI ready. ESC quit, HOME/END scroll, PGUP/PGDN page, TAB focus. CTRL+ALT+T toggles mouse.');
+logLine('sys', 'Ollama TUI ready. Type /help for commands and shortcuts.');
 screen.render();
